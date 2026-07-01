@@ -1,7 +1,7 @@
 extends Node3D
 
 # Configuration
-var RADIUS:      float = 1  # How far out the consoles sit from the center
+var RADIUS:      float = 1.5  # How far out the consoles sit from the center
 var totalConsoles: int = 5
 var currentIndex:  int = 0    # The console currently in focus
 
@@ -36,6 +36,9 @@ func spawnPlaceholderConsoles():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	for box in consoleNodes:
+		box.rotation.y = -self.rotation.y
+		
 	if activeTween and activeTween.is_running():
 		return
 	
