@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://uv3pqa622rkf"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_qyror"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ytbjj"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_cw886"]
+
+[node name="Main" type="Node3D" unique_id=918828439]
+
+[node name="MainCamera" type="Camera3D" parent="." unique_id=176197739]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 3.25)
+
+[node name="MainLight" type="DirectionalLight3D" parent="." unique_id=2070173833]
+transform = Transform3D(0.70710677, -0.49999997, 0.49999997, 0, 0.70710677, 0.70710677, -0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
+
+[node name="ConsoleCarousel" type="Node3D" parent="." unique_id=2133387784]
+
+[node name="ConsolePlaceholder_0" type="MeshInstance3D" parent="ConsoleCarousel" unique_id=915327759]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
+mesh = SubResource("BoxMesh_qyror")
+
+[node name="ConsolePlaceholder_1" type="MeshInstance3D" parent="ConsoleCarousel" unique_id=769315666]
+mesh = SubResource("BoxMesh_ytbjj")
+
+[node name="ConsolePlaceholder_2" type="MeshInstance3D" parent="ConsoleCarousel" unique_id=1435437930]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
+mesh = SubResource("BoxMesh_cw886")
