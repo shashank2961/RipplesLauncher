@@ -3,7 +3,8 @@ extends Node3D
 # Configuration
 var RADIUS:        float = 3  # How far out the consoles sit from the center
 var activeAlpha:   float = 1.0     # Fully solid when selected
-var inactiveAlpha: float = 0.15   # 80% transparent when in the background
+var inactiveAlpha: float = 0.15   # 85% transparent when in the background
+var timePassed:    float = 0.00   # sin
 
 var totalConsoles: int = 5
 var currentIndex:  int = 0    # The console currently in focus
@@ -47,12 +48,25 @@ func spawnPlaceholderConsoles():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	timePassed += delta
+	
 	# Counterspin for all child objects under Carousel
 	for box in consoleNodes:
 		box.rotation.y = -self.rotation.y
 	if activeTween and activeTween.is_running():
 		return
+		
+	# Hover Logic
+	for i in range(consoleNodes.size()):
+		var box = consoleNodes[i]
+		
+		# Frequency parameter is INSIDE the bubble, while the float value outside is the Amplitude
+		if i == currentIndex:
+			box.position.y = sin(timePassed * 2.0) * 0.05
+		else:
+			box.position.y = sin(timePassed * 1.2) * 0.05
 	
+	# Keyboard Logic
 	if Input.is_action_just_pressed("ui_left"):
 		currentIndex = (currentIndex - 1 + totalConsoles) % totalConsoles # Mod helps us loop when we move past the range
 		rotateToCurrent()
@@ -98,7 +112,7 @@ func rotateToCurrent():
 	activeTween.set_ease(Tween.EASE_OUT)
 	
 	# Animate the 'rotation:y' property of THIS node (the Carousel parent) 
-	# to our target angle over a duration of 0.45 seconds
+	# to our target angle over a duration of 0.35 seconds
 	activeTween.tween_property(self, "rotation:y", targetAngle, 0.35)
 	
 	#Loop through all boxes and animate their transparency
