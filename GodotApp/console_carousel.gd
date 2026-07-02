@@ -1,19 +1,29 @@
 extends Node3D
 
 # Configuration
-var RADIUS:      float = 1.5  # How far out the consoles sit from the center
+var RADIUS:        float = 3  # How far out the consoles sit from the center
+var activeAlpha:   float = 1.0     # Fully solid when selected
+var inactiveAlpha: float = 0.15   # 80% transparent when in the background
+
 var totalConsoles: int = 5
 var currentIndex:  int = 0    # The console currently in focus
 
-# Array of spawned console models
 var consoleNodes: Array = []
 var activeTween: Tween
+
+
+
 
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	spawnPlaceholderConsoles()
 	arrangeCarousel()
+	updateInitalTransparency()
+
+
+
+# Methods ------------------------------------------------------------------------------------------
 
 # Creates the placeholder Console objects, and Adds them to carousel.
 func spawnPlaceholderConsoles():
@@ -27,6 +37,7 @@ func spawnPlaceholderConsoles():
 		#2. Add colour
 		var material = StandardMaterial3D.new()
 		material.albedo_color = colors[i % colors.size()]
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA  # Allows object's transparency settings to change
 		meshInstance.material_override = material
 		
 		# 3. Add to the Carousel
@@ -36,19 +47,17 @@ func spawnPlaceholderConsoles():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	# Counterspin for all child objects under Carousel
 	for box in consoleNodes:
 		box.rotation.y = -self.rotation.y
-		
 	if activeTween and activeTween.is_running():
 		return
 	
-	# If a user clicks left, move the carousel to the left
 	if Input.is_action_just_pressed("ui_left"):
-		currentIndex = (currentIndex - 1 + totalConsoles) % totalConsoles
+		currentIndex = (currentIndex - 1 + totalConsoles) % totalConsoles # Mod helps us loop when we move past the range
 		rotateToCurrent()
-	# If a user clicks right, move carousel to the right
 	if Input.is_action_just_pressed("ui_right"):
-		currentIndex = (currentIndex + 1) % totalConsoles
+		currentIndex = (currentIndex + 1) % totalConsoles # Mod helps us loop when we move past the range
 		rotateToCurrent()
 
 
@@ -57,13 +66,18 @@ func arrangeCarousel():
 	
 	for i in range(totalConsoles):
 		var angle = i * angleStep
-		
-		# Calculating X and Z coordinates to form a ring on the floor
 		var x = RADIUS * sin(angle)
 		var z = RADIUS * cos(angle)
-		
-		# set the posiition for each consoleNode to the new x and z
 		consoleNodes[i].position = Vector3(x, 0, z)
+		
+		
+func updateInitalTransparency():
+	for i in range(totalConsoles):
+		var mat = consoleNodes[i].material_override as StandardMaterial3D
+		if i == currentIndex:
+			mat.albedo_color.a = activeAlpha
+		else:
+			mat.albedo_color.a = inactiveAlpha
 	
 	
 func rotateToCurrent():
@@ -79,11 +93,17 @@ func rotateToCurrent():
 		
 	# Create a fresh Tween runner
 	activeTween = create_tween()
-	
-	# Configure it to use a premium, snappy "Cubic" deceleration curve
+	activeTween.set_parallel(true)
 	activeTween.set_trans(Tween.TRANS_CUBIC)
 	activeTween.set_ease(Tween.EASE_OUT)
 	
 	# Animate the 'rotation:y' property of THIS node (the Carousel parent) 
 	# to our target angle over a duration of 0.45 seconds
-	activeTween.tween_property(self, "rotation:y", targetAngle, 0.45)
+	activeTween.tween_property(self, "rotation:y", targetAngle, 0.35)
+	
+	#Loop through all boxes and animate their transparency
+	for i in range(totalConsoles):
+		var mat = consoleNodes[i].material_override as StandardMaterial3D
+		var targetAlpha = activeAlpha if i == currentIndex else inactiveAlpha
+		
+		activeTween.tween_property(mat,"albedo_color:a", targetAlpha, 0.45)
