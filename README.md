@@ -1,4 +1,4 @@
-RipplesLauncher is a modern game launcher built to elevate the Retroid Pocket experience. Ripples acts as a unified interface for your local media collection, providing quick-launch integration with Android emulation apps.
+RipplesLauncher is a modern game launcher built for Retroid Pocket devices (intended for the Retroid Pocket 2 series). Inspired by the Dreamcast's UI, Ripples offers a fun, interactive launcher for various applications and files.
 
 Built using:
 - Godot 4.0
