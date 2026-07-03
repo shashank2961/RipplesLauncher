@@ -2,18 +2,17 @@ extends Node3D
 
 # Configuration
 var RADIUS:        float = 3  # How far out the consoles sit from the center
-var activeAlpha:   float = 1.0     # Fully solid when selected
-var inactiveAlpha: float = 0.15   # 85% transparent when in the background
-var timePassed:    float = 0.00   # sin
-
 var totalConsoles: int = 5
 var currentIndex:  int = 0    # The console currently in focus
 
+# Transparancy and Hover settings
+var activeAlpha:   float = 1.0     # Fully solid when selected
+var inactiveAlpha: float = 0.15   # 85% transparent when in the background
+
+# Mesh and Anchor
 var consoleNodes: Array = []
+var objectTimers: Array = []   
 var activeTween: Tween
-
-
-
 
 
 # Called when the node enters the scene tree for the first time.
@@ -44,12 +43,13 @@ func spawnPlaceholderConsoles():
 		# 3. Add to the Carousel
 		add_child(meshInstance)
 		consoleNodes.append(meshInstance)
+		
+		#4. Add a timer for each object
+		objectTimers.append(0.00)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	timePassed += delta
-	
+func _process(delta: float) -> void:	
 	# Counterspin for all child objects under Carousel
 	for box in consoleNodes:
 		box.rotation.y = -self.rotation.y
@@ -60,11 +60,13 @@ func _process(delta: float) -> void:
 	for i in range(consoleNodes.size()):
 		var box = consoleNodes[i]
 		
-		# Frequency parameter is INSIDE the bubble, while the float value outside is the Amplitude
 		if i == currentIndex:
-			box.position.y = sin(timePassed * 2.0) * 0.05
+			objectTimers[i] += delta * 2.0
 		else:
-			box.position.y = sin(timePassed * 1.2) * 0.05
+			objectTimers[i] += delta * 1.2
+		# Frequency parameter is INSIDE the bubble, while the float value outside is the Amplitude
+		box.position.y = sin(objectTimers[i]) * 0.05
+		
 	
 	# Keyboard Logic
 	if Input.is_action_just_pressed("ui_left"):
