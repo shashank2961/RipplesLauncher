@@ -17,16 +17,15 @@ var activeTween: Tween
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	spawnPlaceholderConsoles()
-	arrangeCarousel()
-	updateInitalTransparency()
+	spawn_consoles()
+	arrange_carousel()
+	update_transparency()
 
 
 
 # Methods ------------------------------------------------------------------------------------------
-
 # Creates the placeholder Console objects, and Adds them to carousel.
-func spawnPlaceholderConsoles():
+func spawn_consoles():
 	var model_paths = [
 		"res://assets/models/PS1/ps1.glb", # Index 0
 		"res://assets/models/PS1/ps1.glb", # Index 1
@@ -41,12 +40,7 @@ func spawnPlaceholderConsoles():
 		var console_instance = console_scene.instantiate()
 		
 		# 2. Prepare its internal meshes for transparency right away
-		# This ensures the material exists before our transparency loops run!
-		for child in console_instance.get_children():
-			if child is MeshInstance3D:
-				if not child.material_override:
-					child.material_override = StandardMaterial3D.new()
-					child.material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		initialize_mesh_materials(console_instance)
 		
 		# 3. Add to the Carousel and track it
 		add_child(console_instance)
@@ -74,7 +68,6 @@ func _process(delta: float) -> void:
 			objectTimers[i] += delta * 1.2
 		# Frequency parameter is INSIDE the bubble, while the float value outside is the Amplitude
 		box.position.y = sin(objectTimers[i]) * 0.05
-		
 	
 	# Keyboard Logic
 	if Input.is_action_just_pressed("ui_left"):
@@ -85,7 +78,7 @@ func _process(delta: float) -> void:
 		rotateToCurrent()
 
 
-func arrangeCarousel():
+func arrange_carousel():
 	var angleStep = (2*PI) / totalConsoles # Split 360 degrees into even slices (for console)
 	
 	for i in range(totalConsoles):
@@ -95,15 +88,12 @@ func arrangeCarousel():
 		consoleNodes[i].position = Vector3(x, 0, z)
 		
 		
-func updateInitalTransparency():
+func update_transparency():
 	for i in range(totalConsoles):
 		var model = consoleNodes[i]
 		var targetAlpha = activeAlpha if i == currentIndex else inactiveAlpha
 		
-		# Every item is a Blender model, so loop through its internal meshes
-		for child in model.get_children():
-			if child is MeshInstance3D:
-				child.material_override.albedo_color.a = targetAlpha
+		set_model_alpha_recursive(model, targetAlpha)
 	
 	
 func rotateToCurrent():
@@ -131,7 +121,49 @@ func rotateToCurrent():
 	for i in range(totalConsoles):
 		var model = consoleNodes[i]
 		var targetAlpha = activeAlpha if i == currentIndex else inactiveAlpha
+		tween_model_alpha_recursive(model, targetAlpha)
 		
-		for child in model.get_children():
-			if child is MeshInstance3D:
-				activeTween.tween_property(child.material_override, "albedo_color:a", targetAlpha, 0.9)
+		
+# Recursive Helper Functions ----------------------------------------------------------------------
+
+# Recursively finds every mesh (no matter how deep) and ensures they have override materials
+func initialize_mesh_materials(node: Node):
+	if node is MeshInstance3D:
+		if not node.material_override:
+			node.material_override = StandardMaterial3D.new()
+			node.material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			
+	for child in node.get_children():
+		initialize_mesh_materials(child)
+
+
+# Recursively sets the transparency on every child mesh, disabling transparency entirely when alpha is 1.0
+func set_model_alpha_recursive(node: Node, alpha: float):
+	if node is MeshInstance3D and node.material_override:
+		var mat = node.material_override as StandardMaterial3D
+		# Fixes the X-ray look: if alpha is 1.0 (active item), turn off transparency!
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if alpha < 1.0 else BaseMaterial3D.TRANSPARENCY_DISABLED
+		mat.albedo_color.a = alpha
+		
+	for child in node.get_children():
+		set_model_alpha_recursive(child, alpha)
+
+
+# Recursively tweens transparency, toggling transparency mode on and off at the right moments
+func tween_model_alpha_recursive(node: Node, alpha: float):
+	if node is MeshInstance3D and node.material_override:
+		var mat = node.material_override as StandardMaterial3D
+		
+		if alpha >= 1.0:
+			# If transitioning to solid, slide alpha first, then disable transparency mode when done
+			activeTween.tween_property(mat, "albedo_color:a", alpha, 0.45)
+			# Disable transparency
+			activeTween.tween_callback(func(): mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED)
+		else:
+			# If transitioning to transparent, enable transparency immediately so it can fade cleanly
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			#change its transparenct
+			activeTween.tween_property(mat, "albedo_color:a", alpha, 0.45)
+			
+	for child in node.get_children():
+		tween_model_alpha_recursive(child, alpha)

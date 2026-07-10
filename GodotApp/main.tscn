@@ -5,7 +5,7 @@
 [node name="Main" type="Node3D" unique_id=918828439]
 
 [node name="MainCamera" type="Camera3D" parent="." unique_id=176197739]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 5.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 5.25)
 
 [node name="MainLight" type="DirectionalLight3D" parent="." unique_id=2070173833]
 transform = Transform3D(0.70710677, -0.49999997, 0.49999997, 0, 0.70710677, 0.70710677, -0.70710677, -0.49999997, 0.49999997, 0, 0, 0)
