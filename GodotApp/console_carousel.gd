@@ -27,25 +27,33 @@ func _ready() -> void:
 
 # Creates the placeholder Console objects, and Adds them to carousel.
 func spawnPlaceholderConsoles():
-	var colors = [Color.MEDIUM_PURPLE, Color.INDIAN_RED, Color.SEA_GREEN, Color.GOLDENROD, Color.DEEP_SKY_BLUE]
+	var model_paths = [
+		"res://assets/models/PS1/ps1.glb", # Index 0
+		"res://assets/models/PS1/ps1.glb", # Index 1
+		"res://assets/models/PS1/ps1.glb", # Index 2
+		"res://assets/models/PS1/ps1.glb", # Index 3
+		"res://assets/models/PS1/ps1.glb"  # Index 4
+	]
 	
 	for i in range(totalConsoles):
-		# 1. Make the object
-		var meshInstance = MeshInstance3D.new()
-		meshInstance.mesh = BoxMesh.new()
+		# 1. Load the specific scene from our list
+		var console_scene = load(model_paths[i])
+		var console_instance = console_scene.instantiate()
 		
-		#2. Add colour
-		var material = StandardMaterial3D.new()
-		material.albedo_color = colors[i % colors.size()]
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA  # Allows object's transparency settings to change
-		meshInstance.material_override = material
+		# 2. Prepare its internal meshes for transparency right away
+		# This ensures the material exists before our transparency loops run!
+		for child in console_instance.get_children():
+			if child is MeshInstance3D:
+				if not child.material_override:
+					child.material_override = StandardMaterial3D.new()
+					child.material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		
-		# 3. Add to the Carousel
-		add_child(meshInstance)
-		consoleNodes.append(meshInstance)
+		# 3. Add to the Carousel and track it
+		add_child(console_instance)
+		consoleNodes.append(console_instance)
 		
-		#4. Add a timer for each object
-		objectTimers.append(0.00)
+		# 4. Initialize our personal tracking arrays
+		objectTimers.append(0.0)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -89,11 +97,13 @@ func arrangeCarousel():
 		
 func updateInitalTransparency():
 	for i in range(totalConsoles):
-		var mat = consoleNodes[i].material_override as StandardMaterial3D
-		if i == currentIndex:
-			mat.albedo_color.a = activeAlpha
-		else:
-			mat.albedo_color.a = inactiveAlpha
+		var model = consoleNodes[i]
+		var targetAlpha = activeAlpha if i == currentIndex else inactiveAlpha
+		
+		# Every item is a Blender model, so loop through its internal meshes
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				child.material_override.albedo_color.a = targetAlpha
 	
 	
 func rotateToCurrent():
@@ -119,7 +129,9 @@ func rotateToCurrent():
 	
 	#Loop through all boxes and animate their transparency
 	for i in range(totalConsoles):
-		var mat = consoleNodes[i].material_override as StandardMaterial3D
+		var model = consoleNodes[i]
 		var targetAlpha = activeAlpha if i == currentIndex else inactiveAlpha
 		
-		activeTween.tween_property(mat,"albedo_color:a", targetAlpha, 0.45)
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				activeTween.tween_property(child.material_override, "albedo_color:a", targetAlpha, 0.9)
