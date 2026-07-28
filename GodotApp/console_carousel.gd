@@ -28,7 +28,7 @@ func _ready() -> void:
 func spawn_consoles():
 	var model_paths = [
 		"res://assets/models/PS1/ps1.glb", # Index 0
-		"res://assets/models/PS1/ps1.glb", # Index 1
+		"res://assets/models/Gamefella Colour/GamefellaColour.glb",
 		"res://assets/models/PS1/ps1.glb", # Index 2
 		"res://assets/models/PS1/ps1.glb", # Index 3
 		"res://assets/models/PS1/ps1.glb"  # Index 4
